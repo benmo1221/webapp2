@@ -4,6 +4,7 @@ import av
 import torch
 import cv2
 import pathlib
+import os
 
 # Use the appropriate Path class depending on the OS
 if os.name == 'nt':  # Windows
