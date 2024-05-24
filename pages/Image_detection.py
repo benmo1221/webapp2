@@ -14,7 +14,7 @@ pathlib.PosixPath = pathlib.WindowsPath
 from utils.general import non_max_suppression, scale_boxes
 
 # Add YOLOv5 repository to Python path
-sys.path.append('yolov5')  # Adjust this path to your yolov5 repository
+#sys.path.append('yolov5')  # Adjust this path to your yolov5 repository
 
 # Importing centralized model loader
 from yolov5_model import load_yolov5_model
