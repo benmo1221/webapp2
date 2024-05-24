@@ -54,5 +54,5 @@ wheel>=0.38.0 # not directly required, pinned by Snyk to avoid a vulnerability
 #extra
 streamlit==1.32.0
 streamlit_webrtc==0.47.6
-
+ultralytics
 
