@@ -6,9 +6,11 @@ import sys
 import cv2
 import pathlib
 
-# Adding a temporary fix for Windows compatibility
-temp = pathlib.PosixPath
-pathlib.PosixPath = pathlib.WindowsPath
+# Use the appropriate Path class depending on the OS
+if os.name == 'nt':  # Windows
+    pathlib.PosixPath = pathlib.WindowsPath
+else:  # Non-Windows (e.g., Linux, MacOS)
+    pathlib.WindowsPath = pathlib.PosixPath
 
 # Importing non-max suppression and scaling functions from utils
 from utils.general import non_max_suppression, scale_boxes
