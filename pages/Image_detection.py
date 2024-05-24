@@ -19,6 +19,7 @@ from utils.general import non_max_suppression, scale_boxes
 #sys.path.append('yolov5')  # Adjust this path to your yolov5 repository
 
 # Importing centralized model loader
+import yolov5_model
 from yolov5_model import load_yolov5_model
 
 # Create YOLOv5 detector instance
