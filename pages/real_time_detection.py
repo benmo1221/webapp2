@@ -9,6 +9,7 @@ import pathlib
 temp = pathlib.PosixPath
 pathlib.PosixPath = pathlib.WindowsPath
 
+import yolov5_model
 
 st.title("Real-time")
 # Load the YOLOv5 model
