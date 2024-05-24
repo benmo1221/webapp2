@@ -1,0 +1,13 @@
+train: /content/gdrive/MyDrive/yolov5/Weapon_detection/weapon_data_yolo_split/train/data
+val: /content/gdrive/MyDrive/yolov5/Weapon_detection/weapon_data_yolo_split/val/data
+
+
+nc: 3
+names: ['Gun', 'Knife', 'Pistol']
+
+roboflow:
+  workspace: weapon-detection-swu02
+  project: testset-k5q1o
+  version: 1
+  license: CC BY 4.0
+  url: https://universe.roboflow.com/weapon-detection-swu02/testset-k5q1o/dataset/1
