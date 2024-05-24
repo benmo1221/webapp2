@@ -7,9 +7,11 @@ import sys
 import pathlib
 from utils.general import non_max_suppression, scale_boxes
 
-# Adding a temporary fix for Windows compatibility
-temp = pathlib.PosixPath
-pathlib.PosixPath = pathlib.WindowsPath
+# Use the appropriate Path class depending on the OS
+if os.name == 'nt':  # Windows
+    pathlib.PosixPath = pathlib.WindowsPath
+else:  # Non-Windows (e.g., Linux, MacOS)
+    pathlib.WindowsPath = pathlib.PosixPath
 
 # Add YOLOv5 repository to Python path
 #sys.path.append('yolov5')  # Adjust this path to your yolov5 repository
