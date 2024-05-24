@@ -7,6 +7,7 @@ import sys
 import pathlib
 from utils.general import non_max_suppression, scale_boxes
 import yolov5_model
+import os
 
 # Use the appropriate Path class depending on the OS
 if os.name == 'nt':  # Windows
