@@ -12,7 +12,7 @@ temp = pathlib.PosixPath
 pathlib.PosixPath = pathlib.WindowsPath
 
 # Add YOLOv5 repository to Python path
-sys.path.append('yolov5')  # Adjust this path to your yolov5 repository
+#sys.path.append('yolov5')  # Adjust this path to your yolov5 repository
 
 # Importing centralized model loader
 from yolov5_model import load_yolov5_model  
