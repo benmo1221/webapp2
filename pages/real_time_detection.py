@@ -13,7 +13,7 @@ if os.name == 'nt':  # Windows
 else:  # Non-Windows (e.g., Linux, MacOS)
     pathlib.WindowsPath = pathlib.PosixPath
 
-import yolov5_model
+#import yolov5_model
 
 st.title("Real-time YOLOv5 Object Detection")
 
