@@ -86,7 +86,11 @@ def main():
 
 if __name__ == "__main__":
     # Ensure the event loop is properly handled
-    if not hasattr(asyncio, 'get_running_loop'):
-        asyncio.get_event_loop().run_until_complete(main())
-    else:
-        main()
+    try:
+        if not hasattr(asyncio, 'get_running_loop'):
+            asyncio.get_event_loop().run_until_complete(main())
+        else:
+            main()
+    except Exception as e:
+        logging.error(f"An error occurred during execution: {e}")
+        st.error(f"An error occurred during execution: {e}")
