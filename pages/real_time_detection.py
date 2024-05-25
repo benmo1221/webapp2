@@ -6,6 +6,11 @@ import cv2
 import pathlib
 import os
 import asyncio
+import logging
+from urllib.error import HTTPError
+
+# Set up logging
+logging.basicConfig(level=logging.DEBUG)
 
 # Use the appropriate Path class depending on the OS
 if os.name == 'nt':  # Windows
@@ -13,16 +18,30 @@ if os.name == 'nt':  # Windows
 else:  # Non-Windows (e.g., Linux, MacOS)
     pathlib.WindowsPath = pathlib.PosixPath
 
-import yolov5_model
-
 st.title("Real-time YOLOv5 Object Detection")
 
 # Load the YOLOv5 model
 @st.cache_resource()
-def load_model(weights='models/best.pt'):
-    model = torch.hub.load("ultralytics/yolov5", "custom", path=weights, force_reload=True)
-    model.eval()
-    return model
+def load_model(weights='models/best.pt', local_weights='local_model.pt'):
+    try:
+        # Try to load the model from the local path if it exists
+        if os.path.exists(local_weights):
+            model = torch.hub.load("ultralytics/yolov5", "custom", path=local_weights, force_reload=True)
+            logging.info(f"Model loaded from local path: {local_weights}")
+        else:
+            # Otherwise, attempt to load it from the remote repository
+            model = torch.hub.load("ultralytics/yolov5", "custom", path=weights, force_reload=True)
+            logging.info(f"Model loaded from remote path: {weights}")
+        model.eval()
+        return model
+    except HTTPError as e:
+        logging.error(f"Failed to load YOLOv5 model. HTTP Error: {e}")
+        st.error(f"Failed to load YOLOv5 model. HTTP Error: {e}")
+        st.stop()
+    except Exception as e:
+        logging.error(f"An unexpected error occurred: {e}")
+        st.error(f"An unexpected error occurred: {e}")
+        st.stop()
 
 # Initialize the model outside the callback to cache it
 model = load_model()
