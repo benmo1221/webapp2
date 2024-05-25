@@ -13,19 +13,19 @@ if os.name == 'nt':  # Windows
 else:  # Non-Windows (e.g., Linux, MacOS)
     pathlib.WindowsPath = pathlib.PosixPath
 
-#import yolov5_model
+import yolov5_model
 
 st.title("Real-time YOLOv5 Object Detection")
 
 # Load the YOLOv5 model
 @st.cache_resource()
-def load_yolov5_model(weights='models/best.pt'):
+def load_model(weights='models/best.pt'):
     model = torch.hub.load("ultralytics/yolov5", "custom", path=weights, force_reload=True)
     model.eval()
     return model
 
 # Initialize the model outside the callback to cache it
-model = load_yolov5_model()
+model = load_model()
 
 class VideoProcessor(VideoProcessorBase):
     def __init__(self, confidence_threshold):
