@@ -8,6 +8,8 @@ import os
 import asyncio
 import logging
 from urllib.error import HTTPError
+from watchdog.observers import Observer
+from watchdog.events import FileSystemEventHandler
 
 # Set up logging
 logging.basicConfig(level=logging.DEBUG)
@@ -18,10 +20,13 @@ if os.name == 'nt':  # Windows
 else:  # Non-Windows (e.g., Linux, MacOS)
     pathlib.WindowsPath = pathlib.PosixPath
 
+# Directory to monitor for changes to the YOLOv5 model weights
+model_directory = "models"
+
 st.title("Real-time YOLOv5 Object Detection")
 
 # Load the YOLOv5 model
-@st.cache_resource()
+@st.cache(allow_output_mutation=True)
 def load_model(weights='models/best.pt', local_weights='local_model.pt'):
     try:
         # Try to load the model from the local path if it exists
@@ -70,11 +75,29 @@ class VideoProcessor(VideoProcessorBase):
 
         return av.VideoFrame.from_ndarray(img, format="bgr24")
 
+class ModelChangeHandler(FileSystemEventHandler):
+    def __init__(self, model_path):
+        self.model_path = model_path
+
+    def on_modified(self, event):
+        if event.src_path.endswith('.pt') and event.src_path == self.model_path:
+            logging.info("Model weights file modified. Reloading model...")
+            model = load_model()
+            video_processor.model = model
+            logging.info("Model reloaded successfully.")
+
 def main():
     st.title("YOLOv5 Object Detection with Webcam (WebRTC)")
 
     # Confidence threshold slider
     confidence_threshold = st.slider('Confidence threshold', 0.0, 1.0, 0.25)
+
+    # Set up model change handler
+    model_weights_path = os.path.join(model_directory, 'best.pt')
+    event_handler = ModelChangeHandler(model_weights_path)
+    observer = Observer()
+    observer.schedule(event_handler, model_directory, recursive=False)
+    observer.start()
 
     webrtc_ctx = webrtc_streamer(key="example",
                                  mode=WebRtcMode.SENDRECV,
@@ -86,11 +109,7 @@ def main():
 
 if __name__ == "__main__":
     # Ensure the event loop is properly handled
-    try:
-        if not hasattr(asyncio, 'get_running_loop'):
-            asyncio.get_event_loop().run_until_complete(main())
-        else:
-            main()
-    except Exception as e:
-        logging.error(f"An error occurred during execution: {e}")
-        st.error(f"An error occurred during execution: {e}")
+    if not hasattr(asyncio, 'get_running_loop'):
+        asyncio.get_event_loop().run_until_complete(main())
+    else:
+        main()
