@@ -1,60 +1,57 @@
 import streamlit as st
 import cv2
-import numpy as np
 import torch
-import pathlib
-import os
 from streamlit_webrtc import webrtc_streamer, VideoProcessorBase, WebRtcMode
 
-# Use the appropriate Path class depending on the OS
-if os.name == 'nt':  # Windows
-    pathlib.PosixPath = pathlib.WindowsPath
-else:  # Non-Windows (e.g., Linux, MacOS)
-    pathlib.WindowsPath = pathlib.PosixPath
-
-# Importing non-max suppression and scaling functions from utils
-from utils.general import non_max_suppression, scale_boxes
-
-# Import centralized model loader
+# Import the YOLOv5 model loader
 from yolov5_model import load_yolov5_model
 
-# Create YOLOv5 detector instance
-yolo_detector = load_yolov5_model(weights='models/best.pt')
+# Set page layout and title
+st.set_page_config(layout="wide")
+st.title("Real-time Object Detection with Webcam")
 
-# Set up confidence threshold
-confidence_threshold = 0.5
-
-# Video Processor Class for Object Detection
+# Function to perform object detection on frames
 class ObjectDetector(VideoProcessorBase):
-    def __init__(self):
-        super().__init__()
+    def __init__(self, model, confidence_threshold):
+        self.model = model
+        self.confidence_threshold = confidence_threshold
 
-    def recv(self, frame: np.ndarray) -> np.ndarray:
-        # Convert BGR frame to RGB
-        rgb_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-
-        # Perform object detection
-        results = yolo_detector.detect(rgb_frame, confidence_threshold)
+    def recv(self, frame):
+        # Perform inference on the frame
+        img = frame.to_ndarray(format="bgr24")
+        results = self.model(img)
 
         # Draw bounding boxes on the frame
-        for *xyxy, conf, cls in results.xyxy[0]:
-            cv2.rectangle(frame, (int(xyxy[0]), int(xyxy[1])), (int(xyxy[2]), int(xyxy[3])), (0, 255, 0), 2)
-            cv2.putText(frame, f'{yolo_detector.names[int(cls)]} {conf:.2f}', (int(xyxy[0]), int(xyxy[1])),
-                        cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 1)
+        for det in results.xyxy[0]:  # xyxy format: (x1, y1, x2, y2, conf, cls)
+            x1, y1, x2, y2, conf, cls = det.tolist()
+            if conf >= self.confidence_threshold:
+                cv2.rectangle(img, (int(x1), int(y1)), (int(x2), int(y2)), (0, 255, 0), 2)
+                cv2.putText(img, f"{self.model.names[int(cls)]} ({conf:.2f})", (int(x1), int(y1) - 10),
+                            cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
 
-        return frame
+        return cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
 
-# Streamlit App
-def main():
-    st.title("Real-time Object Detection with YOLOv5")
+# Function to get the user's chosen model
+def get_user_model():
+    # Insert your code here to get the user's chosen model file
+    return "path_to_your_model_file.pt"  # Replace this with the actual path to the model file
 
-    # Display confidence threshold slider
-    global confidence_threshold
-    confidence_threshold = st.slider('Confidence threshold', 0.0, 1.0, 0.5)
+# Load YOLOv5 model
+model_file_path = get_user_model()
+if model_file_path and os.path.isfile(model_file_path):
+    device_option = 'cuda' if torch.cuda.is_available() else 'cpu'
+    model = load_yolov5_model(weights=model_file_path, device=device_option)
+else:
+    st.warning("Model file not available! Please add it to the models folder.")
 
-    # Run object detection using Webrtc
-    webrtc_ctx = webrtc_streamer(key="example", mode=WebRtcMode.SENDRECV, video_processor_factory=ObjectDetector,
-                                 async_processing=True)
+# Confidence threshold slider
+confidence_threshold = st.sidebar.slider('Confidence', min_value=0.1, max_value=1.0, value=.45)
 
-if __name__ == "__main__":
-    main()
+# WebRTC streaming configuration
+webrtc_ctx = webrtc_streamer(key="example",
+                             mode=WebRtcMode.SENDRECV,
+                             video_processor_factory=lambda: ObjectDetector(model, confidence_threshold),
+                             media_stream_constraints={"video": True, "audio": False})
+
+if webrtc_ctx.video_processor:
+    webrtc_ctx.video_processor.model.confidence_threshold = confidence_threshold
