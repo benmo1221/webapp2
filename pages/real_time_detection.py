@@ -5,6 +5,7 @@ import torch
 import cv2
 import pathlib
 import os
+import asyncio
 
 # Use the appropriate Path class depending on the OS
 if os.name == 'nt':  # Windows
@@ -14,7 +15,8 @@ else:  # Non-Windows (e.g., Linux, MacOS)
 
 import yolov5_model
 
-st.title("Real-time")
+st.title("Real-time YOLOv5 Object Detection")
+
 # Load the YOLOv5 model
 @st.cache_resource()
 def load_yolov5_model(weights='models/best.pt'):
@@ -64,4 +66,8 @@ def main():
         webrtc_ctx.video_processor.update_confidence_threshold(confidence_threshold)
 
 if __name__ == "__main__":
-    main()
+    # Ensure the event loop is properly handled
+    if not hasattr(asyncio, 'get_running_loop'):
+        asyncio.get_event_loop().run_until_complete(main())
+    else:
+        main()
