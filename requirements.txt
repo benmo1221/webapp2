@@ -57,5 +57,3 @@ streamlit_webrtc==0.47.6
 ultralytics
 os-sys
 av
-torch
-opencv-python-headless
